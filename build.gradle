@@ -5,6 +5,7 @@ description = "Spring Cloud"
 buildscript {
 	repositories {
 		jcenter()
+		mavenLocal()
 		maven { url 'https://repo.spring.io/plugins-release' }
 	}
 	dependencies {

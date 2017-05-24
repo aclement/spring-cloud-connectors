@@ -1,9 +1,15 @@
 package org.springframework.cloud.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.springframework.cloud.CloudConnector;
 import org.springframework.cloud.CloudException;
@@ -18,11 +24,47 @@ import org.springframework.cloud.CloudException;
  */
 public class EnvironmentAccessor {
 
+	private static Logger logger = Logger.getLogger(EnvironmentAccessor.class.getName());
+	
+	private final static String LOCAL_PROPERTIES_FILE = "localcloud.properties";
+	
+	Properties localProperties;
+	
+	public EnvironmentAccessor() {
+		// Is there a local file we should be using?
+		// Load from classpath?
+		File localPropertiesFile = new File(LOCAL_PROPERTIES_FILE);
+		if (!localPropertiesFile.exists()) {
+			localPropertiesFile = new File(System.getProperty("user.home")+File.separator+LOCAL_PROPERTIES_FILE);
+		}
+		if (localPropertiesFile.exists() ) {
+			logger.log(Level.INFO,"Local properties file found for environment variables: "+localPropertiesFile);
+			localProperties = new Properties();
+			try {
+				localProperties.load(new FileInputStream(localPropertiesFile));
+				System.out.println("Loaded properties from disk: "+localProperties);
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "Unable to load local properties file: "+localPropertiesFile, e);
+			}
+		}
+	}
+
 	public Map<String, String> getEnv() {
 		return System.getenv();
 	}
 
 	public String getEnvValue(String key) {
+		String systemValue = System.getenv(key);
+		if (systemValue != null) {
+			return systemValue;
+		}
+		if (localProperties != null) {
+			String localFileValue = localProperties.getProperty(key);
+			if (localFileValue != null) {
+				logger.log(Level.INFO, "Using local file value: "+key+"="+localFileValue);
+				return localFileValue;
+			}
+		}
 		return System.getenv(key);
 	}
 
