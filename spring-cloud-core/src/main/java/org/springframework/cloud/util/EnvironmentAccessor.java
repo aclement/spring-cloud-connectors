@@ -42,7 +42,6 @@ public class EnvironmentAccessor {
 			localProperties = new Properties();
 			try {
 				localProperties.load(new FileInputStream(localPropertiesFile));
-				System.out.println("Loaded properties from disk: "+localProperties);
 			} catch (IOException e) {
 				logger.log(Level.WARNING, "Unable to load local properties file: "+localPropertiesFile, e);
 			}
